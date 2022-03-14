@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace HotelListing.IRepository {
 	public interface IUnitOfWork : IDisposable {
-		IGenericRepository<Country>? Countries { get; }
-		IGenericRepository<Hotel>? Hotels { get; }
+		IGenericRepository<Country> Countries { get; }
+		IGenericRepository<Hotel> Hotels { get; }
 		Task SaveAsync();
 	}
 }
