@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
+using HotelListing.Core.DTOs;
+using HotelListing.Core.Models;
+using HotelListing.Core.Services;
 using HotelListing.Data;
-using HotelListing.DTOs;
-using HotelListing.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -62,9 +63,18 @@ namespace HotelListing.Controllers {
 				return Unauthorized();
 			}
 
-			return Accepted(new { Token = await _authManager.CreateToken() });
+			return Accepted(new TokenRequest { Token = await _authManager.CreateToken(), RefreshToken = await _authManager.CreateRefreshToken() });
 
 		}
 
+		[HttpPost]
+		[Route("refreshtoken")]
+		public async Task<IActionResult> RefreshToken([FromBody] TokenRequest request) {
+			var tokenRequest = await _authManager.VerifyRefreshToken(request);
+			if (tokenRequest is null) {
+				return Unauthorized();
+			}
+			return Ok(tokenRequest);
+		}
 	}
 }

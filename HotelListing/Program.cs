@@ -1,10 +1,9 @@
 using AspNetCoreRateLimit;
-using HotelListing;
-using HotelListing.Configurations;
+using HotelListing.Core;
+using HotelListing.Core.IRepository;
+using HotelListing.Core.Repository;
+using HotelListing.Core.Services;
 using HotelListing.Data;
-using HotelListing.IRepository;
-using HotelListing.Repository;
-using HotelListing.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -35,7 +34,8 @@ builder.Services.AddCors(o => {
 		.AllowAnyHeader());
 });
 
-builder.Services.AddAutoMapper(typeof(MapperInitializer));
+//builder.Services.AddAutoMapper(typeof(MapperInitializer));
+builder.Services.ConfigureAutoMapper();
 
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
