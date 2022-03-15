@@ -4,6 +4,7 @@ using HotelListing.DTOs;
 using HotelListing.IRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Controllers {
 	[Route("api/[controller]")]
@@ -23,28 +24,18 @@ namespace HotelListing.Controllers {
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<IActionResult> GetHotels() {
-			try {
-				var hotels = await _unitOfWork.Hotels.GetAllAsync();
-				var results = _mapper.Map<List<HotelDTO>>(hotels);
-				return Ok(results);
-			} catch (Exception ex) {
-				_logger.LogError(ex, $"Something Went Wrong in the {nameof(GetHotels)}");
-				return StatusCode(500, "Internal Server Error. Please Try Again Later");
-			}
+			var hotels = await _unitOfWork.Hotels.GetAllAsync();
+			var results = _mapper.Map<List<HotelDTO>>(hotels);
+			return Ok(results);
 		}
 
 		[HttpGet("{id:int}", Name = "GetHotel")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<IActionResult> GetHotel(int id) {
-			try {
-				var hotel = await _unitOfWork.Hotels.GetSingleAsync(q => q.Id == id, new List<string> { "Country" });
-				var result = _mapper.Map<HotelDTO>(hotel);
-				return Ok(result);
-			} catch (Exception ex) {
-				_logger.LogError(ex, $"Something Went Wrong in the {nameof(GetHotel)}");
-				return StatusCode(500, "Internal Server Error. Please Try Again Later");
-			}
+			var hotel = await _unitOfWork.Hotels.GetSingleAsync(q => q.Id == id, include: q => q.Include(x => x.Country!));
+			var result = _mapper.Map<HotelDTO>(hotel);
+			return Ok(result);
 		}
 
 		[Authorize(Roles = "Administrator")]
@@ -58,15 +49,10 @@ namespace HotelListing.Controllers {
 				return BadRequest(ModelState);
 			}
 
-			try {
-				var hotel = _mapper.Map<Hotel>(hotelDTO);
-				await _unitOfWork.Hotels.InsertAsync(hotel);
-				await _unitOfWork.SaveAsync();
-				return CreatedAtRoute("GetHotel", new { id = hotel.Id }, hotel);
-			} catch (Exception ex) {
-				_logger.LogError(ex, $"Something Went Wrong in the {nameof(CreateHotel)}");
-				return StatusCode(500, "Internal Server Error. Please Try Again Later");
-			}
+			var hotel = _mapper.Map<Hotel>(hotelDTO);
+			await _unitOfWork.Hotels.InsertAsync(hotel);
+			await _unitOfWork.SaveAsync();
+			return CreatedAtRoute("GetHotel", new { id = hotel.Id }, hotel);
 		}
 
 		[Authorize]
@@ -80,22 +66,17 @@ namespace HotelListing.Controllers {
 				return BadRequest(ModelState);
 			}
 
-			try {
-				var hotel = await _unitOfWork.Hotels.GetSingleAsync(q => q.Id == id);
-				if (hotel == null) {
-					_logger.LogError($"Invalid UPDATE attempt in {nameof(UpdateHotel)}");
-					return BadRequest("Submitted data is invalid");
-				}
-
-				_mapper.Map(hotelDTO, hotel);
-				_unitOfWork.Hotels.Update(hotel);
-				await _unitOfWork.SaveAsync();
-
-				return NoContent();
-			} catch (Exception ex) {
-				_logger.LogError(ex, $"Something Went Wrong in the {nameof(UpdateHotel)}");
-				return StatusCode(500, "Internal Server Error. Please Try Again Later");
+			var hotel = await _unitOfWork.Hotels.GetSingleAsync(q => q.Id == id);
+			if (hotel == null) {
+				_logger.LogError($"Invalid UPDATE attempt in {nameof(UpdateHotel)}");
+				return BadRequest("Submitted data is invalid");
 			}
+
+			_mapper.Map(hotelDTO, hotel);
+			_unitOfWork.Hotels.Update(hotel);
+			await _unitOfWork.SaveAsync();
+
+			return NoContent();
 		}
 
 		[Authorize(Roles = "Administrator")]
@@ -109,20 +90,15 @@ namespace HotelListing.Controllers {
 				return BadRequest(ModelState);
 			}
 
-			try {
-				var hotel = await _unitOfWork.Hotels.GetSingleAsync(q => q.Id == id);
-				if (hotel == null) {
-					_logger.LogError($"Invalid DELETE attempt in {nameof(DeleteHotel)}");
-					return BadRequest("Submitted data is invalid");
-				}
-				await _unitOfWork.Hotels.DeleteAsync(id);
-				await _unitOfWork.SaveAsync();
-
-				return NoContent();
-			} catch (Exception ex) {
-				_logger.LogError(ex, $"Something Went Wrong in the {nameof(DeleteHotel)}");
-				return StatusCode(500, "Internal Server Error. Please Try Again Later");
+			var hotel = await _unitOfWork.Hotels.GetSingleAsync(q => q.Id == id);
+			if (hotel == null) {
+				_logger.LogError($"Invalid DELETE attempt in {nameof(DeleteHotel)}");
+				return BadRequest("Submitted data is invalid");
 			}
+			await _unitOfWork.Hotels.DeleteAsync(id);
+			await _unitOfWork.SaveAsync();
+
+			return NoContent();
 		}
 	}
 }
