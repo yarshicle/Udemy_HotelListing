@@ -68,7 +68,7 @@ namespace HotelListing.Core.Services {
 		public async Task<string> CreateRefreshToken() {
 			await _userManager.RemoveAuthenticationTokenAsync(_user, "HotelListingApi", "RefreshToken");
 			var newRefreshToken = await _userManager.GenerateUserTokenAsync(_user, "HotelListingApi", "RefreshToken");
-			var result = await _userManager.SetAuthenticationTokenAsync(_user, "HotelListingApi", "RefreshToken", newRefreshToken);
+			await _userManager.SetAuthenticationTokenAsync(_user, "HotelListingApi", "RefreshToken", newRefreshToken);
 			return newRefreshToken;
 		}
 

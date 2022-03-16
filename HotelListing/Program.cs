@@ -71,7 +71,10 @@ var app = builder.Build();
 
 //if (app.Environment.IsDevelopment()) {
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c => {
+	var swaggerJsonBasePath = string.IsNullOrWhiteSpace(c.RoutePrefix) ? "." : "..";
+	c.SwaggerEndpoint($"{swaggerJsonBasePath}/swagger/v1/swagger.json", "Hotel Listing API");
+});
 //}
 
 app.ConfigureExceptionHandler();
